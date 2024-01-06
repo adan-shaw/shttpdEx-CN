@@ -1,18 +1,5 @@
 #include "shttpd.h"
 
-//初始化时服务器的默认配置
-/*
-struct conf_opts conf_para = {
-	"/usr/local/var/www/cgi-bin/",	//CGI根目录
-	"index.html",										//默认文件名称
-	"/usr/local/var/www/",					//根文件目录
-	"/etc/SHTTPD.conf",							//配置文件路径和名称
-	8080,														//监听端口
-	4,															//最大客户端数量
-	3,															//超时时间
-	2																//初始化线程数量
-};
-*/
 //短选项的配置为c:d:f:h:o:l:m:t:
 static char *shortopts = "c:d:f:h:o:l:m:t:";
 
@@ -30,16 +17,15 @@ static struct option longopts[] = {
 };
 
 //初始化时服务器的默认配置
-
 struct conf_opts conf_para = {
-	/*CGIRoot CGI根目录 */ "/usr/local/var/www/cgi-bin/",
-	/*DefaultFile 默认文件名称 */ "index.html",
-	/*DocumentRoot 根文件目录 */ "/usr/local/var/www/",
-	/*ConfigFile 配置文件路径和名称 */ "/etc/sHTTPd.conf",
-	/*ListenPort 监听端口 */ 8080,
-	/*MaxClient 最大客户端数量 */ 4,
-	/*TimeOut 超时时间 */ 3,
-	/*InitClient 初始化线程数量 */ 2
+	"/usr/local/var/www/cgi-bin/",	/*CGIRoot CGI根目录*/
+	"index.html",										/*DefaultFile 默认文件名称*/
+	"/usr/local/var/www/",					/*DocumentRoot 根文件目录*/
+	"/etc/sHTTPd.conf",							/*ConfigFile 配置文件路径和名称*/
+	8080,														/*ListenPort 监听端口*/
+	4,															/*MaxClient 最大客户端数量*/
+	3,															/*TimeOut 超时时间*/
+	2																/*InitClient 初始化线程数量*/
 };
 
 /******************************************************
@@ -72,8 +58,8 @@ static int conf_readline (int fd, char *buff, int len)
 	int i = 0;
 	int begin = 0;
 	memset (buff, 0, len);				//清缓冲区
-	for (i = 0; i < len; begin ? i++ : i)	//当开头部分不为'\r'或者'\n'时i计数
-	{															//begin真则i++
+	for (i = 0; i < len; begin ? i++ : i)	//当开头部分不为'\r'或者'\n'时, i计数begin真则i++
+	{
 		n = read (fd, buff + i, 1);	//读一个字符
 		if (n == 0)									//文件末尾
 		{
@@ -112,7 +98,7 @@ static int Para_CmdParse (int argc, char *argv[])
 	{
 		switch (c)
 		{														//getopt_long()如果有输入参数,则输入参数为optarg
-		case 'c':									//CGI跟路径
+		case 'c':										//CGI跟路径
 			l_opt_arg = optarg;
 			if (l_opt_arg && l_opt_arg[0] != ':')
 			{
@@ -120,7 +106,7 @@ static int Para_CmdParse (int argc, char *argv[])
 				memcpy (conf_para.CGIRoot, l_opt_arg, len + 1);	//更新
 			}
 			break;
-		case 'd':									//默认文件名称
+		case 'd':										//默认文件名称
 			l_opt_arg = optarg;
 			if (l_opt_arg && l_opt_arg[0] != ':')
 			{
@@ -128,7 +114,7 @@ static int Para_CmdParse (int argc, char *argv[])
 				memcpy (conf_para.DefaultFile, l_opt_arg, len + 1);
 			}
 			break;
-		case 'f':									//配置文件名称和路径
+		case 'f':										//配置文件名称和路径
 			l_opt_arg = optarg;
 			if (l_opt_arg && l_opt_arg[0] != ':')
 			{
@@ -136,7 +122,7 @@ static int Para_CmdParse (int argc, char *argv[])
 				memcpy (conf_para.ConfigFile, l_opt_arg, len + 1);
 			}
 			break;
-		case 'o':									//根文件路径
+		case 'o':										//根文件路径
 			l_opt_arg = optarg;
 			if (l_opt_arg && l_opt_arg[0] != ':')
 			{
@@ -144,7 +130,7 @@ static int Para_CmdParse (int argc, char *argv[])
 				memcpy (conf_para.DocumentRoot, l_opt_arg, len + 1);
 			}
 			break;
-		case 'l':									//侦听端口
+		case 'l':										//侦听端口
 			l_opt_arg = optarg;
 			if (l_opt_arg && l_opt_arg[0] != ':')
 			{
@@ -152,11 +138,11 @@ static int Para_CmdParse (int argc, char *argv[])
 				value = strtol (l_opt_arg, NULL, 10);	//转化字符串为整形
 				if (value != LONG_MAX && value != LONG_MIN)
 				{
-					conf_para.ListenPort = value;	//更新
+					conf_para.ListenPort = value;				//更新
 				}
 			}
 			break;
-		case 'm':									//最大客户端数量
+		case 'm':										//最大客户端数量
 			l_opt_arg = optarg;
 			if (l_opt_arg && l_opt_arg[0] != ':')
 			{
@@ -164,11 +150,11 @@ static int Para_CmdParse (int argc, char *argv[])
 				value = strtol (l_opt_arg, NULL, 10);	//转化字符串为整形
 				if (value != LONG_MAX && value != LONG_MIN)
 				{
-					conf_para.MaxClient = value;	//更新
+					conf_para.MaxClient = value;				//更新
 				}
 			}
 			break;
-		case 't':									//超时时间
+		case 't':										//超时时间
 			l_opt_arg = optarg;
 			if (l_opt_arg && l_opt_arg[0] != ':')
 			{
@@ -176,7 +162,7 @@ static int Para_CmdParse (int argc, char *argv[])
 				value = strtol (l_opt_arg, NULL, 10);	//转化字符串为整形
 				if (value != LONG_MAX && value != LONG_MIN)
 				{
-					conf_para.TimeOut = value;	//更新
+					conf_para.TimeOut = value;					//更新
 				}
 			}
 			break;
@@ -347,58 +333,48 @@ int do_listen ()
 {
 	struct sockaddr_in server;
 	int ss = -1;
-	int err = -1;
 	int reuse = 1;
-	int ret = -1;
+
 	// 初始化服务器地址
-	memset (&server, 0, sizeof (server));
+	//memset (&server, 0, sizeof (server));
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = htonl (INADDR_ANY);
 	server.sin_port = htons (conf_para.ListenPort);
+
 	//信号截取函数
 	signal (SIGINT, sig_int);
 	signal (SIGPIPE, sig_pipe);
+
 	//生成套接字文件描述符 
 	ss = socket (AF_INET, SOCK_STREAM, 0);
 	if (ss == -1)
 	{
-		printf ("socket() error\n");
-		ret = -1;
-		goto EXITshttpd_listen;
+		perror ("socket()");
+		return -1;
 	}
 	//设置套接字地址和端口复用
-	err = setsockopt (ss, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof (reuse));
-	if (err == -1)
+	if (setsockopt (ss, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof (reuse)) == -1)
 	{
-		printf ("setsockopt SO_REUSEADDR failed\n");
+		perror ("setsockopt()");
+		close(ss);
+		return -11;
 	}
 	//绑定IP和套接字描述符
-	err = bind (ss, (struct sockaddr *) &server, sizeof (server));
-	if (err == -1)
+	if (bind (ss, (struct sockaddr *) &server, sizeof (server)) == -1)
 	{
-		printf ("bind() error\n");
-		ret = -2;
-		goto EXITshttpd_listen;
+		perror ("bind()");
+		close(ss);
+		return -2;
 	}
 	//设置服务器侦听队列长度
-	err = listen (ss, conf_para.MaxClient * 2);
-	if (err)
+	if (listen (ss, conf_para.MaxClient * 2))
 	{
-		printf ("listen() error\n");
-		ret = -3;
-		goto EXITshttpd_listen;
+		perror ("listen()");
+		close(ss);
+		return -3;
 	}
 
-	ret = ss;
-EXITshttpd_listen:
-	return ret;
-}
-
-int l_main ()
-{
-	int ss = -1;
-	ss = do_listen ();
-	return 0;
+	return ss;
 }
 
 /******************************************************

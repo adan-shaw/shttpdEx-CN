@@ -1,6 +1,7 @@
 //@author: adan shaw
 //@E-mail: adan_shaw@qq.com
 //@brief: SHTTPD内容类型的实现
+
 #include "shttpd.h"
 
 //定义的内容类型格式如下
@@ -59,27 +60,23 @@ struct mine_type builtin_mime_types[] = {
 *******************************************************/
 struct mine_type *Mine_Type (char *uri, int len, struct worker_ctl *wctl)
 {
-	printEx ("LCW==>Mine_Type\n");
-	int i = 0;
-	//extern void *memchr(const void *buf, int ch, size_t count);
-	//用法:#include <string.h>
-	//功能:从buf所指内存区域的前count个字节查找字符ch;
-	char *ext = memchr (uri, '.', len);	//查找扩展名的位置
+	int i = 0, found = 0;
 	struct mine_type *mine = NULL;
-	int found = 0;
-	ext++;												//.之后,即为扩展名第一个字节的位置
-	printf ("uri:%s,len:%d,ext is %s\n", uri, len, ext);
+	char *ext = memchr (uri, '.', len);	//查找扩展名的位置(从buf所指内存区域的前count个字节查找字符ch)
+	ext+=1;															//.之后,即为扩展名第一个字节的位置
+	printEx ("LCW==>Mine_Type\n");
+	printEx ("uri:%s,len:%d,ext is %s\n", uri, len, ext);
 	//匹配扩展名
 	for (mine = &builtin_mime_types[i]; mine->extension != NULL; i++)
 	{
 		if (!strncmp (mine->extension, ext, mine->ext_len))
 		{
-			found = 1;								//找到所支持的扩展名
-			printf ("found it, ext is %s\n", mine->extension);
+			found = 1;											//找到所支持的扩展名
+			printEx ("found it, ext is %s\n", mine->extension);
 			break;
 		}
 	}
-	if (!found)										//没有找到的时候默认类型为“text/plain/”
+	if (!found)													//没有找到的时候默认类型为"text/plain/"
 	{
 		mine = &builtin_mime_types[2];
 	}

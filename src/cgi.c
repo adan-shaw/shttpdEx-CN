@@ -1,56 +1,64 @@
 //@author: adan shaw
 //@E-mail: adan_shaw@qq.com
 //@brief: SHTTPD支持CGI的实现
+
 #include "shttpd.h"
+
 /******************************************************
 函数名: GenerateDirFile(struct worker_ctl *wctl)
 参数:
 功能:生成目录下的文件列表
 *******************************************************/
+
 int GenerateDirFile (struct worker_ctl *wctl)
 {
-	struct conn_request *req = &wctl->conn.con_req;
-	struct conn_response *res = &wctl->conn.con_res;
-	char *command = strstr (req->uri, CGISTR) + strlen (CGISTR);
-	char *arg[ARGNUM];
-	int num = 0;
-	char *rpath = wctl->conn.con_req.rpath;
-	struct stat *fs = &wctl->conn.con_res.fsate;
-	//打开目录
-	DIR *dir = opendir (rpath);
-	if (dir == NULL)
-	{
-		//错误
-		res->status = 500;
-		goto EXITgenerateIndex;
-	}
-	//建立临时文件保存目录列表
-	FILE *fs_tmp;
-	char tmpbuff[2048];
-	int filesize = 0;
-	char *uri = wctl->conn.con_req.uri;
-	//以wb+形式创建一个临时二进制文件
-	fs_tmp = tmpfile ();
-	//标题部分
-	sprintf (tmpbuff, "%s%s%s", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<HTML><HEAD><TITLE>", uri, "</TITLE></HEAD>\n");
-	fprintf (fs_tmp, "%s", tmpbuff);
-	filesize += strlen (tmpbuff);
-	//标识部分
-	sprintf (tmpbuff, "%s %s %s", "<BODY><H1>Index of:", uri, " </H1> <HR><P><I>Date: </I> <I>Size: </I></P><HR>");
-	fprintf (fs_tmp, "%s", tmpbuff);
-	filesize += strlen (tmpbuff);
-	//读取目录中的文件列表
-	struct dirent *de;
-
+	char request_buf[URI_MAX];
 	char path[PATHLENGTH];
 	char tmpath[PATHLENGTH];
 	char linkname[PATHLENGTH];
-	//struct stat fs;               //stat 结构定义于:/usr/include/sys/stat.h 文件中
-	strcpy (path, rpath);
+	char size_str[32];
+	char *arg[ARGNUM];
+
+	struct conn_request *req = &wctl->conn.con_req;
+	struct conn_response *res = &wctl->conn.con_res;
+	char *rpath = wctl->conn.con_req.rpath;
+	struct stat *fs = &wctl->conn.con_res.fsate;
+	char *uri = wctl->conn.con_req.uri;
+	char *command = strstr (req->uri, CGISTR) + strlen (CGISTR);
+
+	int filesize = 0;
+	FILE *fs_tmp;
+	struct dirent *de;
+	off_t size_int;
+
+	//打开目录
+	DIR *dir = opendir (rpath);
+	if (dir == NULL)//错误
+	{
+		res->status = 500;
+		goto EXITgenerateIndex;
+	}
+
+	//以wb+形式创建一个临时二进制文件
+	fs_tmp = tmpfile ();
+
+	//标题部分
+	sprintf (request_buf, "%s%s%s", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<HTML><HEAD><TITLE>", uri, "</TITLE></HEAD>\n");
+	fprintf (fs_tmp, "%s", request_buf);
+	filesize += strlen (request_buf);
+
+	//标识部分
+	sprintf (request_buf, "%s %s %s", "<BODY><H1>Index of:", uri, " </H1> <HR><P><I>Date: </I> <I>Size: </I></P><HR>");
+	fprintf (fs_tmp, "%s", request_buf);
+	filesize += strlen (request_buf);
+
+	//读取目录中的文件列表
+	strncpy (path, rpath, PATHLENGTH);
 	if (rpath[strlen (rpath)] != '/')
 	{
 		rpath[strlen (rpath)] = '/';
 	}
+
 	while ((de = readdir (dir)) != NULL)	//读取一个文件
 	{
 		memset (tmpath, 0, sizeof (tmpath));
@@ -59,25 +67,23 @@ int GenerateDirFile (struct worker_ctl *wctl)
 		{
 			if (strcmp (de->d_name, ".."))	//不是父目录
 			{
-				strcpy (linkname, de->d_name);	//将目录名称作为链接名称
+				strncpy (linkname, de->d_name, PATHLENGTH);	//将目录名称作为链接名称
 			}
 			else											//是父目录
 			{
-				strcpy (linkname, "Parent Directory");	//将父目录作为链接名称
+				strncpy (linkname, "Parent Directory", PATHLENGTH);	//将父目录作为链接名称
 			}
 
 			sprintf (tmpath, "%s%s", path, de->d_name);	//构建当前文件的全路径
-			//stat (tmpath, &fs);       //获得文件信息
-			stat (tmpath, fs);
+			//stat (tmpath, &fs);       
+			stat (tmpath, fs);//获得文件信息
 			if (S_ISDIR (fs->st_mode))	//是一个目录
 			{
 				//打印目录的连接为目录名称
-				sprintf (tmpbuff, "<A HREF=\"%s/\">%s/</A><BR>\n", de->d_name, tmpath);
+				sprintf (request_buf, "<A HREF=\"%s/\">%s/</A><BR>\n", de->d_name, tmpath);
 			}
 			else											//正常文件
 			{
-				char size_str[32];
-				off_t size_int;
 				size_int = fs->st_size;	//文件大小
 				if (size_int < 1024)		//不到1K
 					sprintf (size_str, "%d bytes", (int) size_int);
@@ -86,11 +92,11 @@ int GenerateDirFile (struct worker_ctl *wctl)
 				else										//其他
 					sprintf (size_str, "%1.2f Mbytes", (float) size_int / (1024 * 1024));
 				//输出文件大小
-				sprintf (tmpbuff, "<A HREF=\"%s\">%s</A> (%s)<BR>\n", de->d_name, linkname, size_int);
+				sprintf (request_buf, "<A HREF=\"%s\">%s</A> (%s)<BR>\n", de->d_name, linkname, size_int);
 			}
 			//将形成的字符串写入临时文件
-			fprintf (fs_tmp, "%s", tmpbuff);
-			filesize += strlen (tmpbuff);
+			fprintf (fs_tmp, "%s", request_buf);
+			filesize += strlen (request_buf);
 		}
 	}
 	//生成临时的文件信息,主要是文件大小

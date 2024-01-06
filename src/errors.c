@@ -83,21 +83,24 @@ void Error_505 (struct worker_ctl *wctl)
 *******************************************************/
 int GenerateErrorMine (struct worker_ctl *wctl)
 {
-	struct error_mine *err = NULL;	//错误类型
+	struct error_mine *err = NULL;									//错误类型
 	int i = 0;
+
 	//轮询查找类型匹配的错误类型
-	for (err = &_error_http[i]; err->status != wctl->conn.con_res.status; i++) ;	//这句感觉怪怪的,如果一直找不到
+	for (err = &_error_http[i]; err->status != wctl->conn.con_res.status; i++)
+		;
 
 	if (err->status != wctl->conn.con_res.status)
 	{
-		err = &_error_http[0];			//没有找到的错误类型为第一个
+		err = &_error_http[0];												//没有找到的错误类型为第一个
 	}
+
 	//构建信息头部
 	snprintf (wctl->conn.dres, sizeof (wctl->conn.dres), "HTTP/%lu.%lu %d %s\r\n" "Content-Type:%s\r\n" "Content-Length:%d\r\n" "\r\n" "%s", wctl->conn.con_req.major, wctl->conn.con_req.minor, err->status, err->msg, "text/plain", strlen (err->content), err->content);
 
 	wctl->conn.con_res.cl = strlen (err->content);	//内容长度
-	wctl->conn.con_res.fd = -1;		//无文件可读
-	wctl->conn.con_res.status = 400;	//错误代码
+	wctl->conn.con_res.fd = -1;											//无文件可读
+	wctl->conn.con_res.status = 400;								//错误代码
 
 	return 0;
 }
