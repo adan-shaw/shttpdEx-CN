@@ -1,12 +1,16 @@
 //@author: adan shaw
 //@E-mail: adan_shaw@qq.com
 //@brief: 客户端请求分析
+
 #include "shttpd.h"
+
 extern void Error_400 (struct worker_ctl *wctl);
 extern void Error_403 (struct worker_ctl *wctl);
 extern void Error_404 (struct worker_ctl *wctl);
 extern void Error_505 (struct worker_ctl *wctl);
 
+extern struct vec _shttpd_methods[];
+extern struct conf_opts conf_para;
 static struct http_header http_headers[] = {
 	{16, HDR_INT, OFFSET (cl), "Content-Length: "},
 	{14, HDR_STRING, OFFSET (ct), "Content-Type: "},
@@ -23,8 +27,6 @@ static struct http_header http_headers[] = {
 	{0, HDR_INT, 0, NULL}
 };
 
-extern struct vec _shttpd_methods[];
-extern struct conf_opts conf_para;
 /******************************************************
 函数名:montoi(char *s)
 参数:

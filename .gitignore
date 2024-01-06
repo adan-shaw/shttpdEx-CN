@@ -1,0 +1,6 @@
+shttpd
+shttpd-debug
+.vscode
+*.so
+*.o
+*.a
