@@ -308,7 +308,6 @@ void Para_Init (int argc, char *argv[])
 	return;												//返回配置参数
 }
 
-
 struct vec _shttpd_methods[] = {
 	{"GET", 3, METHOD_GET},
 	{"POST", 4, METHOD_POST},
